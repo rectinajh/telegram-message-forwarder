@@ -1,0 +1,236 @@
+{
+  "name": "Telegram Message Forwarder",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "name": "Telegram Trigger",
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1,
+      "position": [
+        240,
+        300
+      ],
+      "webhookId": "auto-generated",
+      "credentials": {
+        "telegramApi": {
+          "id": "1",
+          "name": "Telegram Bot API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{$json.message.chat.title}}",
+              "operation": "equal",
+              "value2": "PF forwarding"
+            }
+          ]
+        }
+      },
+      "name": "Filter PF Forwarding Group",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        460,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "// 格式化消息\nconst message = $input.first();\nconst sourceChat = message.json.message.chat.title || 'Unknown Group';\nconst messageText = message.json.message.text || '[媒体消息]';\nconst userName = message.json.message.from.first_name || 'Unknown';\nconst userId = message.json.message.from.id || 'Unknown';\n\n// 检查是否有媒体文件\nconst hasPhoto = message.json.message.photo;\nconst hasVideo = message.json.message.video;\nconst hasDocument = message.json.message.document;\nconst hasAudio = message.json.message.audio;\nconst hasVoice = message.json.message.voice;\nconst hasSticker = message.json.message.sticker;\n\nlet mediaType = '';\nlet fileId = '';\n\nif (hasPhoto) {\n  mediaType = 'photo';\n  fileId = message.json.message.photo[message.json.message.photo.length - 1].file_id;\n} else if (hasVideo) {\n  mediaType = 'video';\n  fileId = message.json.message.video.file_id;\n} else if (hasDocument) {\n  mediaType = 'document';\n  fileId = message.json.message.document.file_id;\n} else if (hasAudio) {\n  mediaType = 'audio';\n  fileId = message.json.message.audio.file_id;\n} else if (hasVoice) {\n  mediaType = 'voice';\n  fileId = message.json.message.voice.file_id;\n} else if (hasSticker) {\n  mediaType = 'sticker';\n  fileId = message.json.message.sticker.file_id;\n}\n\n// 格式化转发消息\nconst formattedText = `📢 来自: ${sourceChat}\\n👤 用户: ${userName}\\n\\n${messageText}`;\n\nreturn [{\n  json: {\n    chat_id: 'jack hua', // 替换为您的目标频道名称或ID\n    text: formattedText,\n    mediaType: mediaType,\n    fileId: fileId,\n    originalMessage: message.json.message\n  }\n}];"
+      },
+      "name": "Format Message",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        680,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{$json.mediaType}}",
+              "operation": "isEmpty"
+            }
+          ]
+        }
+      },
+      "name": "Check Media Type",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        900,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "sendMessage",
+        "chatId": "={{$json.chat_id}}",
+        "text": "={{$json.text}}"
+      },
+      "name": "Send Text Message",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1,
+      "position": [
+        1120,
+        200
+      ],
+      "credentials": {
+        "telegramApi": {
+          "id": "1",
+          "name": "Telegram Bot API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "sendPhoto",
+        "chatId": "={{$json.chat_id}}",
+        "photo": "={{$json.fileId}}",
+        "caption": "={{$json.text}}"
+      },
+      "name": "Send Photo",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1,
+      "position": [
+        1120,
+        400
+      ],
+      "credentials": {
+        "telegramApi": {
+          "id": "1",
+          "name": "Telegram Bot API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{$json.mediaType}}",
+              "operation": "equal",
+              "value2": "photo"
+            }
+          ]
+        }
+      },
+      "name": "Is Photo",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        1120,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "sendDocument",
+        "chatId": "={{$json.chat_id}}",
+        "document": "={{$json.fileId}}",
+        "caption": "={{$json.text}}"
+      },
+      "name": "Send Other Media",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1,
+      "position": [
+        1320,
+        500
+      ],
+      "credentials": {
+        "telegramApi": {
+          "id": "1",
+          "name": "Telegram Bot API"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Filter PF Forwarding Group",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter PF Forwarding Group": {
+      "main": [
+        [
+          {
+            "node": "Format Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Message": {
+      "main": [
+        [
+          {
+            "node": "Check Media Type",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Media Type": {
+      "main": [
+        [
+          {
+            "node": "Send Text Message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Photo",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Is Photo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Photo": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Send Other Media",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {},
+  "versionId": "1",
+  "meta": {
+    "templateCredsSetupCompleted": false
+  }
+} 

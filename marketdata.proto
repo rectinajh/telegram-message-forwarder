@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+package marketdata;
+
+service MarketDataService {
+  rpc GetMarketData (MarketDataRequest) returns (MarketDataResponse);
+}
+
+message MarketDataRequest {
+  string token = 1; // Token symbol or address
+}
+
+message MarketDataResponse {
+  string token = 1;
+  double liquidity = 2;
+  double mc = 3; // Market Cap
+  repeated Order order_book = 4;
+  int64 timestamp = 5; // Unix ms
+}
+
+message Order {
+  string side = 1; // "buy" or "sell"
+  double price = 2;
+  double amount = 3;
+}

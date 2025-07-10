@@ -1,0 +1,31 @@
+{
+  "name": "telegram-message-forwarder",
+  "version": "1.0.0",
+  "description": "Auto-forward messages from Telegram groups to private channels using GramJS",
+  "main": "forwarder.js",
+  "scripts": {
+    "start": "node forwarder.js",
+    "dev": "node --inspect forwarder.js",
+    "test": "node test-risk-rules.js"
+  },
+  "keywords": [
+    "telegram",
+    "gramjs",
+    "message-forwarding",
+    "automation"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@grpc/grpc-js": "^1.13.4",
+    "@grpc/proto-loader": "^0.7.15",
+    "dotenv": "^16.3.1",
+    "input": "^1.0.1",
+    "joi": "^17.9.2",
+    "openai": "^5.9.0",
+    "telegram": "^2.22.2"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  }
+}
